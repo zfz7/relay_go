@@ -1,0 +1,12 @@
+version: "3.7"
+services:
+  postgres_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: relay
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: relay
+    ports:
+      - 5434:5432
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data

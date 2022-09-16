@@ -1,0 +1,75 @@
+name: Test Application
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  frontend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'yarn'
+          cache-dependency-path: |
+            frontend/yarn.lock
+            acceptance/yarn.lock
+      - run: cd frontend && yarn install && yarn test
+  backend-test:
+    runs-on: ubuntu-latest
+    services:
+      relay_db:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: relay_test
+          POSTGRES_USER: relay_test
+          POSTGRES_DB: relay_test
+        ports:
+          - 5433:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+          check-latest: true
+          cache: true
+      - name: Setup fake build dir && test
+        run: cd backend/server && mkdir build && touch build/index.html && cd .. && go test -v ./...
+  acceptance-test:
+    runs-on: ubuntu-latest
+    services:
+      relay_db:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: relay_test
+          POSTGRES_USER: relay_test
+          POSTGRES_DB: relay_test
+        ports:
+          - 5433:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+          check-latest: true
+          cache: true
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'yarn'
+          cache-dependency-path: |
+            frontend/yarn.lock
+            acceptance/yarn.lock
+      - name: Test
+        run: cd frontend && yarn install && cd ../acceptance && yarn install && yarn test

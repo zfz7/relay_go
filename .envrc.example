@@ -1,0 +1,4 @@
+export RELAY_URL="tetris.zfz7.org"
+export RELAY_SSH_USER="root"
+
+export POSTGRES_PASSWORD="example"
